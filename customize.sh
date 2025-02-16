@@ -53,7 +53,7 @@ restore_subscribe_urls() {
          inBlock && /url: / {
            sub(/url: ".*"/, "url: \"" urls[++i] "\"")
          }
-         /proxies:/ { inBlock = 0 }
+         /profile:/ { inBlock = 0 }
          { print }
         ' "$BACKUP_FILE" "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
     echo "- 订阅地址已恢复 >> 新配置中！"
