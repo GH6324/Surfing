@@ -122,7 +122,7 @@ check_version
 extract_subscribe_urls() {
     if [ -f "$CONFIG_PATH" ]; then
         echo "正在提取订阅地址..."
-        awk '/proxy-providers:/,/^proxies:/' "$CONFIG_PATH" | grep -Eo "url: \".*\"" | sed -E 's/url: "(.*)"/\1/' > "$BACKUP_FILE"
+        awk '/proxy-providers:/,/^profile:/' "$CONFIG_PATH" | grep -Eo "url: \".*\"" | sed -E 's/url: "(.*)"/\1/' > "$BACKUP_FILE"
         
         if [ -s "$BACKUP_FILE" ]; then
             echo "订阅地址已备份到:"
@@ -152,7 +152,7 @@ restore_subscribe_urls() {
                     sub(/url: ".*"/, "url: \"" urls[i] "\"")
                 }
             }
-            /proxies:/ { in_provider = 0 }
+            /profile:/ { in_provider = 0 }
             { print }
         ' "$CONFIG_PATH" > "$CONFIG_PATH.tmp" && \
         mv "$CONFIG_PATH.tmp" "$CONFIG_PATH"
