@@ -4,7 +4,18 @@ if [ "$(id -u)" -ne 0 ]; then
     echo "请设置以 Root 用户运行"
     exit 1
 fi
-source config.env
+
+if [ -f "config.env" ]; then
+    source config.env
+else
+    echo "↴"
+    echo "警告：配置文件 config.env 已创建"
+    echo 'GITHUB_TOKEN=你的个人令牌' > config.env
+    echo "      请打开并配置你的个人令牌，以免受速率限制！"
+    sleep 1
+    source config.env
+fi
+
 SURFING_PATH="/data/adb/modules/Surfing/"
 MODULE_PROP="${SURFING_PATH}module.prop"
 GXSURFING_PATH="/data/adb/modules_update/Surfing"
@@ -319,7 +330,8 @@ FILES=(
 
 check_github_token() {
     if [[ "$GITHUB_TOKEN" != ghp_* ]]; then
-        echo "错误：GitHub 令牌无效！"
+        echo "警告：当前 GitHub token 为非法值"
+        echo "      请正确配置你的个人令牌以免受速率限制！"
         token_invalid=true
         return 1
     fi
@@ -574,13 +586,7 @@ show_menu() {
                 net_error=false
                 token_invalid=false
                 
-                if [ -f "config.env" ]; then
-                    source config.env
-                else
-                    echo "错误：配置文件 config.env 不存在！"
-                    echo 'GITHUB_TOKEN=你的个人令牌' > config.env
-                    echo "      配置文件已创建，请打开并配置你的个人令牌"
-                fi
+
                 
                 check_github_token || true
                 [ ! -d "$LOCAL_SHA_DIR" ] && mkdir -p "$LOCAL_SHA_DIR"
@@ -591,13 +597,12 @@ show_menu() {
                 if $net_error; then
                     echo "✗ 网络连接异常"
                     echo "  请检查网络连接后重试！"
-                elif $token_invalid; then
-                    echo "✗ 令牌验证失败"
-                    echo "  无法检查更新，请检查GITHUB_TOKEN是否为有效值！"
                 elif $rate_limit_exceeded; then
                     echo "✗ GitHub API限制"
                     echo "  当前IP请求次数过多，请更换IP或等待1小时后重试！"
-                
+                elif $token_invalid; then
+                    echo "✗ 令牌验证失败"
+                    echo "  请检查GITHUB_TOKEN是否为有效值！"
                 elif $all_up_to_date; then
                     echo "✓ 所有文件均为最新版本"
                 else
