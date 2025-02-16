@@ -22,8 +22,47 @@ secret: ""
 #修改配置文件保存时，建议重启服务/重载配置.
 #####################
 
+# 健康检查
+p: &p
+  type: http
+  interval: 86400
+  health-check:
+    enable: true
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+# —————————
+
+# 订阅地址相关
+A: &A
+  filter: "^(?!.*(套餐|重置|剩余|到期|订阅|群|账户|流量|有效期|时间|官网)).*$"
+  use:
+  - 1.主要地址
+  - 2.备用地址
+  - 3.额外地址
+
+All: &All
+  type: url-test
+  use:
+  - 1.主要地址
+  - 2.备用地址
+  - 3.额外地址
+
+proxy-providers: # ← 此函数位置请勿变动！此为模块更新时备份恢复订阅变量范围 ↓
+  1.主要地址:
+    <<: *p
+    url: "引入您的Clash订阅链接地址"
+    
+  2.备用地址:
+    <<: *p
+    url: "引入您的Clash订阅链接地址"
+  
+  3.额外地址:
+    <<: *p
+    url: "引入您的Clash订阅链接地址"
+# —————————
+
 # 节点记忆
-profile:
+profile: # ← 此函数位置请勿变动！此为模块更新时备份恢复订阅变量范围 ↑
   store-selected: true
   store-fake-ip: true
 # —————————
@@ -86,6 +125,11 @@ dns:
     - 1.12.12.12
     - 223.5.5.5
     - 223.6.6.6
+  proxy-server-nameserver:
+    - 119.29.29.29
+    - 1.12.12.12
+    - 223.5.5.5
+    - 223.6.6.6
   nameserver-policy:
     "RULE-SET:CN_域名,CN_IP":
       - https://doh.pub/dns-query#🌎 全球直连
@@ -95,46 +139,7 @@ dns:
     - https://cloudflare-dns.com/dns-query#🌐 DNS解析
 # —————————
 
-# 健康检查
-p: &p
-  type: http
-  interval: 86400
-  health-check:
-    enable: true
-    url: https://www.gstatic.com/generate_204
-    interval: 300
-# —————————
-
-# 订阅地址相关
-A: &A
-  filter: "^(?!.*(套餐|重置|剩余|到期|订阅|群|账户|流量|有效期|时间|官网)).*$"
-  use:
-  - 1.主要地址
-  - 2.备用地址
-  - 3.额外地址
-
-All: &All
-  type: url-test
-  use:
-  - 1.主要地址
-  - 2.备用地址
-  - 3.额外地址
-
-proxy-providers: # ← 此函数位置请勿变动！此为模块更新时备份恢复订阅变量范围 ↓
-  1.主要地址:
-    <<: *p
-    url: "引入您的Clash订阅链接地址"
-    
-  2.备用地址:
-    <<: *p
-    url: "引入您的Clash订阅链接地址"
-  
-  3.额外地址:
-    <<: *p
-    url: "引入您的Clash订阅链接地址"
-# —————————
-
-proxies: # ← 此函数位置请勿变动！此为模块更新时备份恢复订阅变量范围 ↑
+proxies:
   - {name: 🌎 全球直连, type: direct, udp: true}
   - {name: ⛔️ 拒绝连接, type: reject}
   - {name: 🌐 DNS_Hijack, type: dns}
