@@ -94,7 +94,7 @@ ui_print "- ————————————————"
 
   cp -f "$MODPATH/box_bll/clash/config.yaml" /data/adb/box_bll/clash/
   cp -f "$MODPATH/box_bll/clash/enhanced_config.yaml" /data/adb/box_bll/clash/
-  cp -f "$MODPATH/box_bll/clash/Toolbox.sh"
+  cp -f "$MODPATH/box_bll/clash/Toolbox.sh" /data/adb/box_bll/clash/
   cp -f "$MODPATH/box_bll/scripts/"* /data/adb/box_bll/scripts/
   rm -rf "$MODPATH/box_bll"
   
