@@ -59,7 +59,7 @@ RULES_URL_PREFIX="https://raw.githubusercontent.com/MoGuangYu/rules/main/Home/"
 RULES=("YouTube.yaml" "TikTok.yaml" "Telegram.yaml" "OpenAI.yaml" "Netflix.yaml" "Microsoft.yaml" "Google.yaml" "Facebook.yaml" "Discord.yaml" "Apple.yaml")
 
 
-CURRENT_VERSION="v13.2.2"
+CURRENT_VERSION="v13.2.3"
 TOOLBOX_URL="https://raw.githubusercontent.com/MoGuangYu/Surfing/main/box_bll/clash/Toolbox.sh"
 TOOLBOX_FILE="/data/adb/box_bll/clash/Toolbox.sh"
 
@@ -114,7 +114,7 @@ check_version() {
                     break
                     ;;
                 *) 
-                    echo "无效的选择！"
+                    echo "无效的输入！"
                     ;;
             esac
         done
@@ -195,13 +195,21 @@ update_module() {
     else
         module_installed=false
         echo "当前设备没有安装 Surfing 模块"
-        echo "是否下载安装？回复y/n"
-        read -r install_confirmation
-        if [ "$install_confirmation" != "y" ]; then
-            echo "↴"
-            echo "操作取消！"
-            return
-        fi
+        
+        # 循环直到用户输入 y 或 n
+        while true; do
+            echo "是否下载安装？回复y/n"
+            read -r install_confirmation
+            if [ "$install_confirmation" == "y" ]; then
+                break
+            elif [ "$install_confirmation" == "n" ]; then
+                echo "↴"
+                echo "操作取消！"
+                return
+            else
+                echo "无效的输入！"
+            fi
+        done
     fi
     
     echo "↴"
@@ -515,7 +523,6 @@ check_and_update_files() {
         done
     done
 }
-
 show_menu() {
     while true; do
         echo "=========="
@@ -545,7 +552,9 @@ show_menu() {
         echo
         echo "12. 项目地址"
         echo
-        echo "13. Exit"
+        echo "13. 一键卸载"
+        echo
+        echo "14. Exit"
         echo "——————"
         read -r choice
         case $choice in
@@ -632,6 +641,9 @@ show_menu() {
                 open_project_page
                 ;;
             13)
+                delete_files_and_dirs
+                ;;
+            14)
                 exit 0
                 ;;
             *)
@@ -1273,6 +1285,36 @@ open_project_page() {
     else
         echo "无法打开浏览器，请手动访问以下地址："
         echo "https://github.com/MoGuangYu/Surfing"
+    fi
+}
+delete_files_and_dirs() {
+    if [[ ! -d "/data/adb/modules/Surfing/" ]]; then
+        echo "↴"
+        echo "当前未安装模块！"
+        return
+    fi
+    echo "↴"
+    echo "警告：此操作将卸载删除 Surfing 模块，所有目录及数据！"
+    echo
+    echo "↴"
+    read -r -p "确定要继续吗？(y/n): " confirm
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        read -r -p "请输入'确认'以继续删除，直接回车取消: " input
+        if [[ "$input" == "确认" ]]; then
+            echo "↴"
+            echo "正在删除..."
+            rm -rf "/data/adb/modules_update/Surfing/" \
+                   "/data/adb/modules/Surfing/" \
+                   "/data/adb/service.d/Surfing_service.sh" 2>/dev/null
+            rm -rf "/data/adb/box_bll/" 2>/dev/null
+            echo "卸载完成！"
+        else
+            echo "↴"
+            echo "操作已取消！"
+        fi
+    else
+        echo "↴"
+        echo "卸载已取消！"
     fi
 }
 show_menu
