@@ -195,8 +195,6 @@ update_module() {
     else
         module_installed=false
         echo "当前设备没有安装 Surfing 模块"
-        
-        # 循环直到用户输入 y 或 n
         while true; do
             echo "是否下载安装？回复y/n"
             read -r install_confirmation
