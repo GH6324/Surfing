@@ -31,7 +31,7 @@ fi
 
 extract_subscribe_urls() {
   if [ -f "$CONFIG_FILE" ]; then
-    awk '/proxy-providers:/,/^proxies:/' "$CONFIG_FILE" | grep -Eo "url: \".*\"" | sed -E 's/url: "(.*)"/\1/' > "$BACKUP_FILE"
+    awk '/proxy-providers:/,/^profile:/' "$CONFIG_FILE" | grep -Eo "url: \".*\"" | sed -E 's/url: "(.*)"/\1/' > "$BACKUP_FILE"
     
     if [ -s "$BACKUP_FILE" ]; then
       echo "- 提取订阅地址已备份到"
