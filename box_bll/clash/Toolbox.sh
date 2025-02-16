@@ -59,62 +59,65 @@ RULES_URL_PREFIX="https://raw.githubusercontent.com/MoGuangYu/rules/main/Home/"
 RULES=("YouTube.yaml" "TikTok.yaml" "Telegram.yaml" "OpenAI.yaml" "Netflix.yaml" "Microsoft.yaml" "Google.yaml" "Facebook.yaml" "Discord.yaml" "Apple.yaml")
 
 
-CURRENT_VERSION="v13.2"
+CURRENT_VERSION="v13.2.1"
 TOOLBOX_URL="https://raw.githubusercontent.com/MoGuangYu/Surfing/main/box_bll/clash/Toolbox.sh"
 TOOLBOX_FILE="/data/adb/box_bll/clash/Toolbox.sh"
+
 get_remote_version() {
-    remote_content=$(curl -s --connect-timeout 3 "$TOOLBOX_URL")
-    if [ $? -ne 0 ]; then
+    remote_content=$(curl -s --connect-timeout 3 "$TOOLBOX_URL") || {
         echo "无法连接到 GitHub！"
         return 1
-    fi
-    remote_version=$(echo "$remote_content" | grep -Eo 'CURRENT_VERSION="v[0-9]+(\.[0-9]+)?"' | head -1 | cut -d'=' -f2 | tr -d '"')
-    if [ -z "$remote_version" ]; then
+    }
+    
+    remote_version=$(
+        echo "$remote_content" |
+        grep -m1 '^CURRENT_VERSION="v[0-9]\+\(\.[0-9]\+\)\{1,2\}"' |
+        sed 's/^CURRENT_VERSION="\(.*\)"/\1/'
+    )
+
+    [ -n "$remote_version" ] || {
         echo "无法获取远程版本信息！"
         return 1
-    fi
+    }
+    
     echo "$remote_version"
-    return 0
 }
+
 check_version() {
-    remote_version=$(get_remote_version)
-    if [ $? -ne 0 ]; then
-        return
-    fi
-    if [ "$(echo "$remote_version" | cut -d'v' -f2)" != "$(echo "$CURRENT_VERSION" | cut -d'v' -f2)" ]; then
+    remote_version=$(get_remote_version) || return
+    if [ "$remote_version" != "$CURRENT_VERSION" ]; then
         echo "↴" 
         echo "GitHub Toolbox版本效验！"
         echo "===================="
         echo "当前版本: $CURRENT_VERSION"
         echo "远程版本: $remote_version"
         echo "===================="
-        echo "是否同步更新脚本？(y/n)"
-        while true; do
-            read -r update_confirmation
-            if [ "$update_confirmation" = "y" ] || [ "$update_confirmation" = "n" ]; then
-                break
-            else
-                echo "无效的输入！"
-            fi
-        done
         
-        if [ "$update_confirmation" = "y" ]; then
-            echo "↴" 
-            echo "正在从 GitHub 下载最新版本..."
-            curl -sS -L -o "$TOOLBOX_FILE" "$TOOLBOX_URL"
-            if [ $? -ne 0 ]; then
-                echo "下载失败，请检查网络连接是否能正常访问 GitHub！"
-                exit 1
-            fi
-            chmod 0644 "$TOOLBOX_FILE"
-            echo "正在运行最新版本的脚本！"
-            exec sh "$TOOLBOX_FILE"
-            exit 0
-        else
-            echo "↴" 
-            echo "更新取消"
-            echo "继续使用当前脚本！"
-        fi
+        while read -r -p "是否同步更新脚本？(y/n) " update_confirmation; do
+            case "$update_confirmation" in
+                [yY]) 
+                    echo "↴" 
+                    echo "正在从 GitHub 下载最新版本..."
+                    if curl -sS -L -o "$TOOLBOX_FILE" "$TOOLBOX_URL"; then
+                        chmod 0644 "$TOOLBOX_FILE"
+                        echo "正在运行最新版本的脚本！"
+                        exec sh "$TOOLBOX_FILE"
+                        exit 0
+                    else
+                        echo "下载失败，请检查网络连接是否能正常访问 GitHub！"
+                        exit 1
+                    fi
+                    ;;
+                [nN])
+                    echo "↴" 
+                    echo "更新取消，继续使用当前脚本！"
+                    break
+                    ;;
+                *) 
+                    echo "无效的选择！"
+                    ;;
+            esac
+        done
     fi
 }
 check_version
