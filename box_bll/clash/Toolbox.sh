@@ -59,7 +59,7 @@ RULES_URL_PREFIX="https://raw.githubusercontent.com/MoGuangYu/rules/main/Home/"
 RULES=("YouTube.yaml" "TikTok.yaml" "Telegram.yaml" "OpenAI.yaml" "Netflix.yaml" "Microsoft.yaml" "Google.yaml" "Facebook.yaml" "Discord.yaml" "Apple.yaml")
 
 
-CURRENT_VERSION="v13.2.1"
+CURRENT_VERSION="v13.2.2"
 TOOLBOX_URL="https://raw.githubusercontent.com/MoGuangYu/Surfing/main/box_bll/clash/Toolbox.sh"
 TOOLBOX_FILE="/data/adb/box_bll/clash/Toolbox.sh"
 
@@ -336,6 +336,7 @@ CONFIG_PATH="$LOCAL_CLASH_DIR/config.yaml"
 BACKUP_FILE="$LOCAL_CLASH_DIR/subscribe_urls_backup.txt"
 LOCAL_SHA_DIR="/data/adb/box_bll/variab/sha_cache"
 FILES=(
+    "$CLASH_PATH/config.yaml|$LOCAL_CLASH_DIR/config.yaml|backup"
     "$SCRIPTS_PATH/box.config|$LOCAL_SCRIPTS_DIR/box.config|backup"
     "$SCRIPTS_PATH/box.inotify|$LOCAL_SCRIPTS_DIR/box.inotify"
     "$SCRIPTS_PATH/box.service|$LOCAL_SCRIPTS_DIR/box.service"
@@ -344,7 +345,6 @@ FILES=(
     "$SCRIPTS_PATH/ctr.utils|$LOCAL_SCRIPTS_DIR/ctr.utils"
     "$SCRIPTS_PATH/net.inotify|$LOCAL_SCRIPTS_DIR/net.inotify"
     "$SCRIPTS_PATH/start.sh|$LOCAL_SCRIPTS_DIR/start.sh"
-    "$CLASH_PATH/config.yaml|$LOCAL_CLASH_DIR/config.yaml|backup"
 )
 
 check_github_token() {
