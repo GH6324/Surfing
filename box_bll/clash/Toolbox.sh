@@ -58,11 +58,10 @@ GIT_URL="https://api.github.com/repos/MoGuangYu/Surfing/releases/latest"
 RULES_URL_PREFIX="https://raw.githubusercontent.com/MoGuangYu/rules/main/Home/"
 RULES=("YouTube.yaml" "TikTok.yaml" "Telegram.yaml" "OpenAI.yaml" "Netflix.yaml" "Microsoft.yaml" "Google.yaml" "Facebook.yaml" "Discord.yaml" "Apple.yaml")
 
-CURRENT_VERSION="v13"
+
+CURRENT_VERSION="v13.1"
 TOOLBOX_URL="https://raw.githubusercontent.com/MoGuangYu/Surfing/main/box_bll/clash/Toolbox.sh"
 TOOLBOX_FILE="/data/adb/box_bll/clash/Toolbox.sh"
-
-
 get_remote_version() {
     remote_content=$(curl -s --connect-timeout 3 "$TOOLBOX_URL")
     if [ $? -ne 0 ]; then
@@ -83,11 +82,22 @@ check_version() {
         return
     fi
     if [ "$(echo "$remote_version" | cut -d'v' -f2)" != "$(echo "$CURRENT_VERSION" | cut -d'v' -f2)" ]; then
-        echo "Toolbox"
-        echo "当前版本版本: $CURRENT_VERSION"
-        echo "远程最新版本: $remote_version"
-        echo "是否更新脚本？回复y/n"
-        read -r update_confirmation
+        echo "↴" 
+        echo "GitHub Toolbox版本效验！"
+        echo "===================="
+        echo "当前版本: $CURRENT_VERSION"
+        echo "远程版本: $remote_version"
+        echo "===================="
+        echo "是否同步更新脚本？(y/n)"
+        while true; do
+            read -r update_confirmation
+            if [ "$update_confirmation" = "y" ] || [ "$update_confirmation" = "n" ]; then
+                break
+            else
+                echo "无效的输入！"
+            fi
+        done
+        
         if [ "$update_confirmation" = "y" ]; then
             echo "↴" 
             echo "正在从 GitHub 下载最新版本..."
@@ -190,7 +200,7 @@ update_module() {
             return
         fi
     fi
-
+    
     echo "↴"
     echo "正在获取服务器中..."
     module_release=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "$GIT_URL")
@@ -212,19 +222,26 @@ update_module() {
     changelog=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "$CHANGELOG_URL")
     latest_changelog=$(echo "$changelog" | awk '/^## /{p=0} p; /^## '$module_version'$/{p=1}')
     echo "$latest_changelog"
-    echo ""
+    echo
 
     if [ "$module_installed" = false ]; then
-        echo "是否安装模块？回复y/n"
+        echo "是否安装模块？(y/n)"
     else
-        echo "是否更新模块？回复y/n"
+        echo "是否更新模块？(y/n)"
     fi
+    
+    while true; do
     read -r confirmation
-    if [ "$confirmation" != "y" ]; then
+    if [ "$confirmation" = "y" ]; then
+        break
+    elif [ "$confirmation" = "n" ]; then
         echo "↴"
-        echo "操作取消！"
+        echo "更新取消！"
         return
+    else
+        echo "无效的输入！"
     fi
+    done
 
     echo "↴"
     echo "正在下载文件中..."
@@ -327,7 +344,6 @@ FILES=(
     "$CLASH_PATH/config.yaml|$LOCAL_CLASH_DIR/config.yaml|backup"
 )
 
-
 check_github_token() {
     if [[ "$GITHUB_TOKEN" != ghp_* ]]; then
         echo "警告：当前 GitHub token 为非法值"
@@ -362,23 +378,26 @@ check_github_token() {
 
 get_file_commit_info() {
     file_path="$1"
-    commit_info=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/$GITHUB_REPO/commits?path=$file_path" | grep -E '"message":' | head -1 | cut -d '"' -f4)
+    commit_info=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/$GITHUB_REPO/commits?path=$file_path&per_page=1" | grep -m1 -E '"message":' | cut -d '"' -f4)
     echo "$commit_info"
 }
 
 get_file_commit_sha() {
     file_path="$1"
-    
-    http_status=$(curl -s -I -H "Authorization: token $GITHUB_TOKEN" -o /dev/null -w "%{http_code}" "https://api.github.com/repos/$GITHUB_REPO/commits?path=$file_path")
-    
+
+    api_response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" -w "\n%{http_code}" "https://api.github.com/repos/$GITHUB_REPO/commits?path=$file_path&per_page=1")
+
+    http_status=$(echo "$api_response" | tail -1)
+    api_content=$(echo "$api_response" | sed '$d')
+
     if [ "$http_status" = "403" ]; then
         rate_limit_exceeded=true
         return 2
     elif [ "$http_status" != "200" ]; then
         return 1
     fi
-    
-    latest_sha=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/$GITHUB_REPO/commits?path=$file_path" | grep '"sha"' | head -1 | cut -d '"' -f4)
+
+    latest_sha=$(echo "$api_content" | grep -m1 '"sha"' | cut -d '"' -f4)
     echo "$latest_sha"
 }
 
@@ -420,15 +439,12 @@ check_and_update_files() {
         echo "      需执行遍历所有文件的更新，获取文件的Sha值缓存！"
     fi
     
-    echo ""
+    echo
     echo "↴"
     echo "正在获取 MoGuangYu/Surfing 仓库最新提交："
-    
-    
     for file_entry in "${FILES[@]}"; do
         IFS='|' read -r file_path local_path need_backup <<< "$file_entry"
         local_sha_file="$LOCAL_SHA_DIR/$(basename "$local_path")_sha"
-
         latest_sha=$(get_file_commit_sha "$file_path")
         case $? in
             2) 
@@ -469,7 +485,7 @@ check_and_update_files() {
                     echo "下载中..."
                     if curl -sS -L -o "$local_path" "https://raw.githubusercontent.com/$GITHUB_REPO/main/$file_path"; then
                         echo "$latest_sha" > "$local_sha_file"
-                        echo "更新成功 ✓"
+                        echo "更新成功 √"
 
                         if [ "$local_path" = "$CONFIG_PATH" ]; then
                             restore_subscribe_urls
@@ -490,7 +506,7 @@ check_and_update_files() {
                     return
                     ;;
                 *)
-                    echo "无效的选择！"
+                    echo "无效的输入！"
                     ;;
             esac
         done
@@ -501,31 +517,31 @@ show_menu() {
     while true; do
         echo "=========="
         echo "Menu：$CURRENT_VERSION"
-        echo ""
+        echo
         echo "1. 重载配置"
-        echo ""
+        echo
         echo "2. 清空数据库缓存"
-        echo ""
+        echo
         echo "3. 更新控制台面板"
-        echo ""
+        echo
         echo "4. 更新数据库"
-        echo ""
+        echo
         echo "5. 更新路由规则"
-        echo ""
+        echo
         echo "6. 更新核心"
-        echo ""
+        echo
         echo "7. 少儿频道"
-        echo ""
+        echo
         echo "8. 控制台面板入口"
-        echo ""
+        echo
         echo "9. 整合客户端更新状态"
-        echo ""
+        echo
         echo "10. 禁用/启用 更新模块"
-        echo ""
+        echo
         echo "11. 检查仓库最新提交"
-        echo ""
+        echo
         echo "12. 项目地址"
-        echo ""
+        echo
         echo "13. Exit"
         echo "——————"
         read -r choice
@@ -574,7 +590,7 @@ show_menu() {
                         ;;
                     *)
                         echo "↴"
-                        echo "无效的选择！"
+                        echo "无效的输入！"
                         ;;
                 esac
                 ;;
@@ -586,13 +602,11 @@ show_menu() {
                 net_error=false
                 token_invalid=false
                 
-
-                
                 check_github_token || true
                 [ ! -d "$LOCAL_SHA_DIR" ] && mkdir -p "$LOCAL_SHA_DIR"
                 check_and_update_files
                 
-                echo ""
+                echo
                 echo "↴"
                 if $net_error; then
                     echo "✗ 网络连接异常"
@@ -604,11 +618,11 @@ show_menu() {
                     echo "✗ 令牌验证失败"
                     echo "  请检查GITHUB_TOKEN是否为有效值！"
                 elif $all_up_to_date; then
-                    echo "✓ 所有文件均为最新版本"
+                    echo "√ 所有文件均为最新版本"
                 else
-                    echo "✓ 检测更新流程完成"
+                    echo "√ 检测更新流程完成"
                 fi
-                echo ""
+                echo
                 echo "检测已完毕..."
                 ;;
             12)
@@ -619,7 +633,7 @@ show_menu() {
                 ;;
             *)
                 echo "↴"
-                echo "无效的选择！"
+                echo "无效的输入！"
                 ;;
         esac
     done
@@ -821,18 +835,18 @@ update_geo_database() {
         rm "/data/adb/box_bll/clash/geoip.dat"
     fi
     echo "正在下载文件中..."
-    curl -o "$GEOIP_PATH" -L "$GEOIP_URL"
+    curl -sS -o "$GEOIP_PATH" -L "$GEOIP_URL"
     if [ $? -ne 0 ]; then
         echo "下载 GeoIP.dat 失败！"
         return
     fi
-    curl -o "$GEOSITE_PATH" -L "$GEOSITE_URL"
+    curl -sS -o "$GEOSITE_PATH" -L "$GEOSITE_URL"
     if [ $? -ne 0 ]; then
         echo "下载 GeoSite.dat 失败！"
         return
     fi
     echo "更新成功✓"
-    echo ""
+    echo
     echo "建议重载配置..."
     chown root:net_admin "$GEOIP_PATH" "$GEOSITE_PATH"
     if [ $? -ne 0 ]; then
@@ -885,7 +899,7 @@ update_rules() {
         fi
     done
     echo "更新成功✓"
-    echo ""
+    echo
     echo "建议重载配置..."
     chown -R root:net_admin "$RULES_PATH"
     find "$RULES_PATH" -type d -exec chmod 0755 {} \;
@@ -912,28 +926,28 @@ show_web_panel_menu() {
                 echo "正在跳转到 Gui Meta..."
                 am start -a android.intent.action.VIEW -d "https://metacubex.github.io/metacubexd"
                 echo "ok"
-                echo ""
+                echo
                 ;;
             2)
                 echo "↴"
                 echo "正在跳转到 Gui Yacd..."
                 am start -a android.intent.action.VIEW -d "https://yacd.mereith.com/"
                 echo "ok"
-                echo ""
+                echo
                 ;;
             3)
                 echo "↴"
                 echo "正在跳转到 Gui Zash..."
                 am start -a android.intent.action.VIEW -d "https://board.zash.run.place/"
                 echo "ok"
-                echo ""
+                echo
                 ;;
             4)
                 echo "↴"
                 echo "正在跳转到本地端口..."
                 am start -a android.intent.action.VIEW -d "http://127.0.0.1:9090/ui/#/"
                 echo "ok"
-                echo ""
+                echo
                 ;;
             5)
                 echo "↴"
@@ -941,7 +955,7 @@ show_web_panel_menu() {
                 ;;
             *)
                 echo "↴"
-                echo "无效的选择！"
+                echo "无效的输入！"
                ;;
         esac
     done
@@ -1049,7 +1063,7 @@ update_web_panel() {
                     mv "$TEMP_DIR/metacubexd-gh-pages/"* "$META_DIR"
                     rm -rf "$TEMP_FILE" "$TEMP_DIR"
                     echo "$([ "$new_install" = true ] && echo "安装成功✓" || echo "更新成功✓")"
-                    echo ""
+                    echo
                 else
                     echo "解压失败，文件异常！"
                 fi
@@ -1090,7 +1104,7 @@ update_web_panel() {
                     mv "$TEMP_DIR/Yacd-meta-gh-pages/"* "$YACD_DIR"
                     rm -rf "$TEMP_FILE" "$TEMP_DIR"
                     echo "$([ "$new_install" = true ] && echo "安装成功✓" || echo "更新成功✓")"
-                    echo ""
+                    echo
                 else
                     echo "解压失败，文件异常！"
                 fi
@@ -1236,7 +1250,7 @@ update_core() {
     mv "$TEMP_DIR/clash" "$CORE_PATH"
     rm -rf "$TEMP_FILE" "$TEMP_DIR"
     echo "更新成功✓"
-    echo ""
+    echo
     echo "重启模块服务中..."
     touch "${SURFING_PATH}disable"
     sleep 1.5
