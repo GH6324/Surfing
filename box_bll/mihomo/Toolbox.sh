@@ -41,7 +41,7 @@ YACDD_URL="https://api.github.com/repos/MetaCubeX/Yacd-meta/releases/latest"
 ZASH_DIR="${PANEL_DIR}Zash/"
 ZASH_URL="https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip"
 ZASHD_URL="https://api.github.com/repos/Zephyruso/zashboard/releases/latest"
-BACKUP_FILE="$COREE_PATH/subscribe_urls_backup.txt"
+BACKUP_FILE="/data/adb/box_bll/mihomo/subscribe_urls_backup.txt"
 TEMP_FILE="/data/local/tmp/Surfing_update.zip"
 TEMP_DIR="/data/local/tmp/Surfing_update"
 DB_PATH="/data/adb/box_bll/mihomo/cache.db"
@@ -59,7 +59,7 @@ RULES_URL_PREFIX="https://raw.githubusercontent.com/MoGuangYu/rules/main/Home/"
 RULES=("YouTube.yaml" "TikTok.yaml" "Telegram.yaml" "OpenAI.yaml" "Netflix.yaml" "Microsoft.yaml" "Google.yaml" "Facebook.yaml" "Discord.yaml" "Apple.yaml")
 
 
-CURRENT_VERSION="v13.3.1"
+CURRENT_VERSION="v13.3.2"
 TOOLBOX_URL="https://raw.githubusercontent.com/MoGuangYu/Surfing/main/box_bll/mihomo/Toolbox.sh"
 TOOLBOX_FILE="/data/adb/box_bll/mihomo/Toolbox.sh"
 
@@ -165,7 +165,7 @@ restore_subscribe_urls() {
         echo "配置文件不存在，无法提取订阅地址"
     fi
 }
-reload_configuration() {
+reload_configuration1() {
        if [ ! -f "$MODULE_PROP" ]; then
           echo "↴" 
           echo "当前未安装模块！"
@@ -248,6 +248,7 @@ update_module() {
         echo "更新取消！"
         return
     else
+        echo "↴"
         echo "无效的输入！"
     fi
     done
@@ -267,39 +268,37 @@ update_module() {
         return
     fi
 
-    if [ -d /data/adb/box_bll/mihomo ]; then
-        extract_subscribe_urls
-    fi
-
     if [ "$KSU" = true ] && [ "$KSU_VER_CODE" -lt 10683 ]; then
         SERVICE_PATH="/data/adb/ksu/service.d"
     else 
         SERVICE_PATH="/data/adb/service.d"
     fi
-    mkdir -p "$SERVICE_PATH"
-    mv "$TEMP_DIR/Surfing_service.sh" "$SERVICE_PATH"
-    chmod 0700 "${SERVICE_PATH}/Surfing_service.sh"
-
+    if [ ! -d "$SERVICE_PATH" ]; then
+      mkdir -p "$SERVICE_PATH"
+    fi
+    
     if [ -d /data/adb/box_bll ]; then
-        mkdir -p "$SCRIPTS_PATH"
-        mkdir -p "$COREE_PATH"
-        mkdir -p "$SURFING_PATH"
-        mkdir -p "$SURFING_PATH/webroot"
+        echo "正在初始化服务..."
+        /data/adb/box_bll/scripts/box.service stop > /dev/null 2>&1
+        sleep 1.5
+        extract_subscribe_urls
 
         [ -f "$CONFIG_PATH" ] && mv "$CONFIG_PATH" "${CONFIG_PATH}.bak"
         [ -f "$BOX_PATH" ] && mv "$BOX_PATH" "${BOX_PATH}.bak"
 
-        mv "$TEMP_DIR/box_bll/scripts/"* "$SCRIPTS_PATH"
-        mv "$TEMP_DIR/box_bll/mihomo/config.yaml" "$COREE_PATH"
-
+        cp -f "$TEMP_DIR/box_bll/mihomo/config.yaml" "$COREE_PATH"
+        cp -f "$TEMP_DIR/box_bll/mihomo/Toolbox.sh" "$COREE_PATH"
+        cp -f "$TEMP_DIR/box_bll/scripts/"* "$SCRIPTS_PATH"
         find "$TEMP_DIR" -mindepth 1 -maxdepth 1 ! -name "README.md" ! -name "Surfing_service.sh" ! -name "customize.sh" ! -name "box_bll" ! -name "META-INF" -exec cp -r {} "$SURFING_PATH" \;
-
-        [ -d "$TEMP_DIR/webroot" ] && cp -r "$TEMP_DIR/webroot/"* "$SURFING_PATH/webroot/"
-
         restore_subscribe_urls
-        reload_configuration
+        
+        echo "正在重启服务..."
+        /data/adb/box_bll/scripts/box.service start  > /dev/null 2>&1
     else
+        mkdir -p "$SCRIPTS_PATH"
+        mkdir -p "$COREE_PATH"
         mkdir -p "$SURFING_PATH"
+        mkdir -p "$SURFING_PATH/webroot"
         mv "$TEMP_DIR/box_bll" "/data/adb/"
         mv "$TEMP_DIR/webroot" "$SURFING_PATH"
         find "$TEMP_DIR" -mindepth 1 -maxdepth 1 ! -name "README.md" ! -name "Surfing_service.sh" ! -name "customize.sh" ! -name "box_bll" ! -name "META-INF" -exec cp -r {} "$SURFING_PATH" \;
@@ -311,14 +310,28 @@ update_module() {
     chmod -R 711 /data/adb/box_bll/scripts/
     chmod -R 700 /data/adb/box_bll/bin/
 
+    if [ "$KSU" = true ]; then
+      sed -i 's/name=Surfingmagisk/name=SurfingKernelSU/g' "$TEMP_DIR/module.prop"
+    fi
+    if [ "$APATCH" = true ]; then
+      sed -i 's/name=Surfingmagisk/name=SurfingAPatch/g' "$TEMP_DIR/module.prop"
+    fi
+    
+    mkdir -p /data/adb/box_bll/bin/
+    mkdir -p /data/adb/box_bll/run/
+    
+    mv "$TEMP_DIR/Surfing_service.sh" "$SERVICE_PATH"
+    chmod 0700 "${SERVICE_PATH}/Surfing_service.sh"
+    
     rm -rf "$TEMP_FILE" "$TEMP_DIR"
 
     for pid in $(pidof inotifyd); do
-        if grep -q box.inotify /proc/${pid}/cmdline; then
-            kill ${pid}
-        fi
+      if grep -qE "box.inotify|net.inotify|ctr.inotify" /proc/${pid}/cmdline; then
+        kill ${pid}
+      fi
     done
-
+    
+    mkdir -p "$SURFING_PATH"
     nohup inotifyd "${SCRIPTS_PATH}box.inotify" "$SURFING_PATH" > /dev/null 2>&1 &
     nohup inotifyd "${SCRIPTS_PATH}net.inotify" "$NET_PATH" > /dev/null 2>&1 &
     nohup inotifyd "${SCRIPTS_PATH}ctr.inotify" "$CTR_PATH" > /dev/null 2>&1 &
@@ -333,24 +346,25 @@ update_module() {
 }
 update_module
 
+#————————————————————
 GITHUB_REPO="MoGuangYu/Surfing"
-SCRIPTS_PATH="box_bll/scripts"
-MIHOMO_PATH="box_bll/mihomo"
+GIT_SCRIPTS_PATH="box_bll/scripts"
+GIT_MIHOMO_PATH="box_bll/mihomo"
 LOCAL_SCRIPTS_DIR="/data/adb/box_bll/scripts"
 LOCAL_MIHOMO_DIR="/data/adb/box_bll/mihomo"
 CONFIG_PATH="$LOCAL_MIHOMO_DIR/config.yaml"
 BACKUP_FILE="$LOCAL_MIHOMO_DIR/subscribe_urls_backup.txt"
 LOCAL_SHA_DIR="/data/adb/box_bll/variab/sha_cache"
 FILES=(
-    "$MIHOMO_PATH/config.yaml|$LOCAL_MIHOMO_DIR/config.yaml|backup"
-    "$SCRIPTS_PATH/box.config|$LOCAL_SCRIPTS_DIR/box.config|backup"
-    "$SCRIPTS_PATH/box.inotify|$LOCAL_SCRIPTS_DIR/box.inotify"
-    "$SCRIPTS_PATH/box.service|$LOCAL_SCRIPTS_DIR/box.service"
-    "$SCRIPTS_PATH/box.tproxy|$LOCAL_SCRIPTS_DIR/box.tproxy"
-    "$SCRIPTS_PATH/ctr.inotify|$LOCAL_SCRIPTS_DIR/ctr.inotify"
-    "$SCRIPTS_PATH/ctr.utils|$LOCAL_SCRIPTS_DIR/ctr.utils"
-    "$SCRIPTS_PATH/net.inotify|$LOCAL_SCRIPTS_DIR/net.inotify"
-    "$SCRIPTS_PATH/start.sh|$LOCAL_SCRIPTS_DIR/start.sh"
+    "$GIT_MIHOMO_PATH/config.yaml|$LOCAL_MIHOMO_DIR/config.yaml|backup"
+    "$GIT_SCRIPTS_PATH/box.config|$LOCAL_SCRIPTS_DIR/box.config|backup"
+    "$GIT_SCRIPTS_PATH/box.inotify|$LOCAL_SCRIPTS_DIR/box.inotify"
+    "$GIT_SCRIPTS_PATH/box.service|$LOCAL_SCRIPTS_DIR/box.service"
+    "$GIT_SCRIPTS_PATH/box.tproxy|$LOCAL_SCRIPTS_DIR/box.tproxy"
+    "$GIT_SCRIPTS_PATH/ctr.inotify|$LOCAL_SCRIPTS_DIR/ctr.inotify"
+    "$GIT_SCRIPTS_PATH/ctr.utils|$LOCAL_SCRIPTS_DIR/ctr.utils"
+    "$GIT_SCRIPTS_PATH/net.inotify|$LOCAL_SCRIPTS_DIR/net.inotify"
+    "$GIT_SCRIPTS_PATH/start.sh|$LOCAL_SCRIPTS_DIR/start.sh"
 )
 
 check_github_token() {
@@ -498,7 +512,7 @@ check_and_update_files() {
 
                         if [ "$local_path" = "$CONFIG_PATH" ]; then
                             restore_subscribe_urls
-                            reload_configuration
+                            reload_configuration1
                         fi
                     else
                         net_error=true
@@ -687,7 +701,7 @@ disable_updates() {
     MODULE_PROP="${MODULE_PROP}"
     if grep -q "^updateJson=" "$MODULE_PROP"; then
         echo "↴" 
-        echo "此操作会对该模块在客户端禁止检测更新，是否继续？回复y/n"
+        echo "此操作会对该模块在客户端禁止检测更新，是否继续？(y/n)"
         read -r confirmation
         if [ "$confirmation" != "y" ]; then
             echo "↴"
@@ -710,7 +724,7 @@ enable_updates() {
     MODULE_PROP="${MODULE_PROP}"
     if [ -f "$UPDATE_STATUS_FILE" ]; then
         echo "↴" 
-        echo "此操作会恢复模块在客户端的检测更新，是否继续？回复y/n"
+        echo "此操作会恢复模块在客户端的检测更新，是否继续？(y/n)"
         read -r confirmation
         if [ "$confirmation" != "y" ];then
             echo "↴"
@@ -747,8 +761,7 @@ integrate_magisk_update() {
     do
         sleep 1
     done
-    VARIAB_PATH="$SURFING_PATH/variab"
-    TEMP_PATH="/data/local/tmp/Surfing_variab_backup"
+
     if [ -d "$GXSURFING_PATH" ]; then
         echo "检测到 安装/更新 Surfing 模块，进行整合..."
         rm -rf "$SURFING_PATH"
@@ -757,6 +770,12 @@ integrate_magisk_update() {
             rm -f "$SURFING_PATH/update"
         fi    
         echo "整合成功✓"
+        for pid in $(pidof inotifyd); do
+        if grep -q box.inotify /proc/${pid}/cmdline; then
+            kill ${pid}
+        fi
+       done
+       nohup inotifyd "${SCRIPTS_PATH}box.inotify" "$SURFING_PATH" > /dev/null 2>&1 & 
     else
         echo "没有检测到 安装/更新 Surfing 模块。"
     fi
@@ -774,7 +793,7 @@ clear_cache() {
         last_clear=$(date -d "@$(cat $CACHE_CLEAR_TIMESTAMP)" +"%Y-%m-%d %H:%M:%S")
         echo "距离上次清空缓存是: $last_clear" 
     fi
-    echo "此操作会清空数据库缓存，是否清除？回复y/n"
+    echo "此操作会清空数据库缓存，是否清除？(y/n)"
     read -r confirmation
     if [ "$confirmation" != "y" ]; then
         echo "↴"
@@ -833,7 +852,7 @@ update_geo_database() {
         echo "当前已是最新版本！"
         return
     fi
-    echo "是否更新？回复y/n"
+    echo "是否更新？(y/n)"
     read -r confirmation
     if [ "$confirmation" != "y" ]; then
         echo "↴"
@@ -887,7 +906,7 @@ update_rules() {
         last_update=$(date -d "@$(cat $RULES_UPDATE_TIMESTAMP)" +"%Y-%m-%d %H:%M:%S")
         echo "距离上次更新是: $last_update"
     fi
-    echo "此操作会从 GitHub 拉取最新全部规则，是否更新？回复y/n"
+    echo "此操作会从 GitHub 拉取最新全部规则，是否更新？(y/n)"
     read -r confirmation
     if [ "$confirmation" != "y" ];then
         echo "↴"
@@ -1039,7 +1058,7 @@ update_web_panel() {
         return
     fi
 
-    echo "是否更新？回复y/n"
+    echo "是否更新？(y/n)"
     read -r confirmation
     if [ "$confirmation" != "y" ]; then
         echo "↴"
@@ -1229,7 +1248,7 @@ update_core() {
         echo "当前已是最新版本！"
         return
     fi
-    echo "是否更新？回复y/n"
+    echo "是否更新？(y/n)"
     read -r confirmation
     if [ "$confirmation" != "y" ]; then
         echo "↴"
