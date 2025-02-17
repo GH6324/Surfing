@@ -65,7 +65,8 @@ if [ -d /data/adb/box_bll ]; then
   ui_print "- ————————————————"
   ui_print "- 正在初始化服务..."
   /data/adb/box_bll/scripts/box.service stop > /dev/null 2>&1
-
+  sleep 1.5
+  
   if [ -d /data/adb/box_bll/clash ]; then
     mv /data/adb/box_bll/clash /data/adb/box_bll/mihomo
   fi
@@ -76,21 +77,20 @@ if [ -d /data/adb/box_bll ]; then
   if [ -d /data/adb/box_bll/mihomo ]; then
     extract_subscribe_urls
     cp /data/adb/box_bll/mihomo/config.yaml /data/adb/box_bll/mihomo/config.yaml.bak
+    ui_print "- 配置文件 config.yaml 已备份 bak"
   fi
   if [ -d /data/adb/box_bll/scripts ]; then
     cp /data/adb/box_bll/scripts/box.config /data/adb/box_bll/scripts/box.config.bak
+    ui_print "- 用户配置 box.config 已备份 bak"
   fi
-  ui_print "- 配置文件 config.yaml 已备份 bak"
-  ui_print "- 用户配置 box.config 已备份 bak"
-  
+
   cp -f "$MODPATH/box_bll/mihomo/config.yaml" /data/adb/box_bll/mihomo/
-  cp -f "$MODPATH/box_bll/mihomo/enhanced_config.yaml" /data/adb/box_bll/mihomo/
   cp -f "$MODPATH/box_bll/mihomo/Toolbox.sh" /data/adb/box_bll/mihomo/
   cp -f "$MODPATH/box_bll/scripts/"* /data/adb/box_bll/scripts/
   rm -rf "$MODPATH/box_bll"
+  rm -rf /data/adb/box_bll/clash
   restore_subscribe_urls
-  ui_print "- 正在重启服务.."
-  sleep 1.5
+  ui_print "- 正在重启服务..."
   /data/adb/box_bll/scripts/box.service start > /dev/null 2>&1
   ui_print "- 更新完成无需重启设备..."
 else
@@ -126,7 +126,7 @@ set_perm "$service_dir/Surfing_service.sh" 0 0 0700
 chmod ugo+x /data/adb/box_bll/scripts/*
 
 for pid in $(pidof inotifyd); do
-  if grep -q box.inotify /proc/${pid}/cmdline; then
+  if grep -qE "box.inotify|net.inotify|ctr.inotify" /proc/${pid}/cmdline; then
     kill ${pid}
   fi
 done
