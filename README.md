@@ -1,7 +1,7 @@
 # Surfing
 
 <h1 align="center">
-  <img src="./folder/Logo.png" alt="CLASHMETA" width="200">
+  <img src="./folder/Logo.png" alt="MIHOMOMETA" width="200">
   <br>CLASHMETA<br>
 </h1>
 
