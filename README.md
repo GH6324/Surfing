@@ -11,8 +11,8 @@
     <a href="https://github.com/MoGuangYu/Surfing/releases/tag/Prerelease-Alpha">
         <img alt="Android" src="https://img.shields.io/badge/Module Latestsnapshot-F05033.svg?logo=android&logoColor=white">
     </a>
-    <a href="https://github.com/MoGuangYu/Surfing/releases/tag/v7.3.1">
-        <img alt="Downloads" src="https://img.shields.io/github/downloads/MoGuangYu/Surfing/v7.3.1/total?label=Download@v7.3.1&labelColor=00b56a&logo=git&logoColor=white">
+    <a href="https://github.com/MoGuangYu/Surfing/releases/tag/v7.3.2">
+        <img alt="Downloads" src="https://img.shields.io/github/downloads/MoGuangYu/Surfing/v7.3.2/total?label=Download@v7.3.2&labelColor=00b56a&logo=git&logoColor=white">
     </a>
 </div>
 
@@ -20,13 +20,13 @@
 
 **English** | [简体中文](./README_CN.md)
 
-This project is a [Magisk](https://github.com/topjohnwu/Magisk), [Kernelsu](https://github.com/tiann/KernelSU), [APatch](https://github.com/bmax121/APatch) module for Clash, sing-box, v2ray, xray, hysteria. It supports REDIRECT (TCP only), TPROXY (TCP + UDP) transparent proxy, TUN (TCP + UDP), and hybrid mode REDIRECT (TCP) + TUN (UDP) proxy.
+This project is a [Magisk](https://github.com/topjohnwu/Magisk), [Kernelsu](https://github.com/tiann/KernelSU), [APatch](https://github.com/bmax121/APatch) module for Clash, mihomo, sing-box, v2ray, xray, hysteria. It supports REDIRECT (TCP only), TPROXY (TCP + UDP) transparent proxy, TUN (TCP + UDP), and hybrid mode REDIRECT (TCP) + TUN (UDP) proxy.
 
 Based on upstream integration for one-stop service, ready to use. Suitable for:
 - Lazy people
 - Beginners
 
-The project's theme and configuration focus on [Clash.Meta](https://github.com/MetaCubeX/Clash.Meta).
+The project's theme and configuration focus on [mihomo.Meta](https://github.com/MetaCubeX/Clash.Meta).
 
 This module needs to be used in a Magisk/Kernelsu environment. If you don't know how to configure the required environment, you might need applications like ClashForAndroid, v2rayNG, surfboard, SagerNet, AnXray.
 

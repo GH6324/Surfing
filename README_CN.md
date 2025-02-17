@@ -11,8 +11,8 @@
     <a href="https://github.com/MoGuangYu/Surfing/releases/tag/Prerelease-Alpha">
         <img alt="Android" src="https://img.shields.io/badge/Module Latestsnapshot-F05033.svg?logo=android&logoColor=white">
     </a>
-    <a href="https://github.com/MoGuangYu/Surfing/releases/tag/v7.3.1">
-        <img alt="Downloads" src="https://img.shields.io/github/downloads/MoGuangYu/Surfing/v7.3.1/total?label=Download@v7.3.1&labelColor=00b56a&logo=git&logoColor=white">
+    <a href="https://github.com/MoGuangYu/Surfing/releases/tag/v7.3.2">
+        <img alt="Downloads" src="https://img.shields.io/github/downloads/MoGuangYu/Surfing/v7.3.2/total?label=Download@v7.3.2&labelColor=00b56a&logo=git&logoColor=white">
     </a>
 </div>
 
@@ -20,14 +20,14 @@
 
 [English](./README.md) | **简体中文**
 
-  本项目为 Clash、sing-box、v2ray、xray、hysteria 的 [Magisk](https://github.com/topjohnwu/Magisk) 、 [Kernelsu](https://github.com/tiann/KernelSU) 、 [APatch](https://github.com/bmax121/APatch) 模块。支持 REDIRECT（仅 TCP）、TPROXY（TCP + UDP）透明代理，支持 TUN（TCP + UDP）亦可 REDIRECT（TCP）+ TUN（UDP） 混合模式代理。
+  本项目为 Clash、mihomo、sing-box、v2ray、xray、hysteria 的 [Magisk](https://github.com/topjohnwu/Magisk) 、 [Kernelsu](https://github.com/tiann/KernelSU) 、 [APatch](https://github.com/bmax121/APatch) 模块。支持 REDIRECT（仅 TCP）、TPROXY（TCP + UDP）透明代理，支持 TUN（TCP + UDP）亦可 REDIRECT（TCP）+ TUN（UDP） 混合模式代理。
   
   基于上游为集成式一体服务、即刷即用   
   此适用以下人群：
   - 懒癌
   - 小白
 
-  项目主题及配置仅围绕 [Clash.Meta](https://github.com/MetaCubeX/Clash.Meta)  
+  项目主题及配置仅围绕 [mihomo.Meta](https://github.com/MetaCubeX/Clash.Meta)  
   
   本模块需在 Magisk/Kernelsu 环境进行使用，如果你不知道如何配置所需环境，你可能需要像 ClashForAndroid、v2rayNG、surfboard、SagerNet、AnXray 等应用程序。  
   
