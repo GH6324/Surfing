@@ -3,14 +3,12 @@
 SKIPUNZIP=1
 ASH_STANDALONE=1
 
-CLASH_RELOAD_URL="http://127.0.0.1:9090/configs"
-CLASH_RELOAD_PATH="/data/adb/box_bll/clash/config.yaml"
 SURFING_PATH="/data/adb/modules/Surfing/"
 SCRIPTS_PATH="/data/adb/box_bll/scripts/"
 NET_PATH="/data/misc/net"
 CTR_PATH="/data/misc/net/rt_tables"
-CONFIG_FILE="/data/adb/box_bll/clash/config.yaml"
-BACKUP_FILE="/data/adb/box_bll/clash/subscribe_urls_backup.txt"
+CONFIG_FILE="/data/adb/box_bll/mihomo/config.yaml"
+BACKUP_FILE="/data/adb/box_bll/mihomo/subscribe_urls_backup.txt"
 
 if [ "$BOOTMODE" != true ]; then
   abort "Error: 请在 Magisk Manager / KernelSU Manager / APatch 中安装"
@@ -27,7 +25,6 @@ fi
 if [ ! -d "$service_dir" ]; then
   mkdir -p "$service_dir"
 fi
-
 
 extract_subscribe_urls() {
   if [ -f "$CONFIG_FILE" ]; then
@@ -61,49 +58,44 @@ restore_subscribe_urls() {
     echo "- 备份文件不存在或为空，无法恢复订阅地址。"
   fi
 }
-reload_configuration() {
-    if [ -f "/data/adb/modules/Surfing/disable" ]; then
-        echo "↴" 
-        echo "服务未运行，重载操作失败！"
-        return
-    fi
-    echo "↴"
-    echo "正在重载 Clash 配置..."
-    sleep 3
-    curl -X PUT "$CLASH_RELOAD_URL" -d "{\"path\":\"$CLASH_RELOAD_PATH\"}"
-    if [ $? -eq 0 ]; then
-        echo "- 成功！"
-    else
-        echo "- 失败！"
-    fi
-}
 
 unzip -qo "${ZIPFILE}" -x 'META-INF/*' -d "$MODPATH"
 if [ -d /data/adb/box_bll ]; then
-ui_print "- Updating..."
-ui_print "- ————————————————"
+  ui_print "- 更新中..."
+  ui_print "- ————————————————"
+  ui_print "- 正在初始化服务..."
+  /data/adb/box_bll/scripts/box.service stop > /dev/null 2>&1
+
   if [ -d /data/adb/box_bll/clash ]; then
+    mv /data/adb/box_bll/clash /data/adb/box_bll/mihomo
+  fi
+  if [ -f /data/adb/box_bll/bin/clash ]; then
+    mv /data/adb/box_bll/bin/clash /data/adb/box_bll/bin/mihomo
+  fi
+
+  if [ -d /data/adb/box_bll/mihomo ]; then
     extract_subscribe_urls
-    cp /data/adb/box_bll/clash/config.yaml /data/adb/box_bll/clash/config.yaml.bak
+    cp /data/adb/box_bll/mihomo/config.yaml /data/adb/box_bll/mihomo/config.yaml.bak
   fi
   if [ -d /data/adb/box_bll/scripts ]; then
     cp /data/adb/box_bll/scripts/box.config /data/adb/box_bll/scripts/box.config.bak
   fi
   ui_print "- 配置文件 config.yaml 已备份 bak"
   ui_print "- 用户配置 box.config 已备份 bak"
-
-  cp -f "$MODPATH/box_bll/clash/config.yaml" /data/adb/box_bll/clash/
-  cp -f "$MODPATH/box_bll/clash/enhanced_config.yaml" /data/adb/box_bll/clash/
-  cp -f "$MODPATH/box_bll/clash/Toolbox.sh" /data/adb/box_bll/clash/
+  
+  cp -f "$MODPATH/box_bll/mihomo/config.yaml" /data/adb/box_bll/mihomo/
+  cp -f "$MODPATH/box_bll/mihomo/enhanced_config.yaml" /data/adb/box_bll/mihomo/
+  cp -f "$MODPATH/box_bll/mihomo/Toolbox.sh" /data/adb/box_bll/mihomo/
   cp -f "$MODPATH/box_bll/scripts/"* /data/adb/box_bll/scripts/
   rm -rf "$MODPATH/box_bll"
-  
   restore_subscribe_urls
-  ui_print "- 更新无需重启设备..."
-  reload_configuration
+  
+  ui_print "- 正在重启服务.."
+  /data/adb/box_bll/scripts/box.service start > /dev/null 2>&1
+  ui_print "- 更新完成无需重启设备..."
 else
   mv "$MODPATH/box_bll" /data/adb/
-  ui_print "- Installing..."
+  ui_print "- 安装中..."
   ui_print "- ————————————————"
   ui_print "- 安装完成 工作目录"
   ui_print "- data/adb/box_bll/"
