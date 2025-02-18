@@ -1320,6 +1320,9 @@ delete_files_and_dirs() {
         read -r -p "请输入'确认'以继续删除，直接回车取消: " input
         if [[ "$input" == "确认" ]]; then
             echo "↴"
+            echo "正在停止服务..."
+            /data/adb/box_bll/scripts/box.service stop > /dev/null 2>&1
+            sleep 1.5
             echo "正在删除..."
             rm -rf "/data/adb/modules_update/Surfing/" \
                    "/data/adb/modules/Surfing/" \
