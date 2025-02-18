@@ -430,7 +430,8 @@ backup_file() {
         backup_file="${local_file}.bak"
         cp "$local_file" "$backup_file"
         echo "↴"
-        echo "备份已创建：$backup_file"
+        echo "备份已创建："
+        echo "$backup_file"
     fi
 }
 
