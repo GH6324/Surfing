@@ -59,7 +59,7 @@ RULES_URL_PREFIX="https://raw.githubusercontent.com/MoGuangYu/rules/main/Home/"
 RULES=("YouTube.yaml" "TikTok.yaml" "Telegram.yaml" "OpenAI.yaml" "Netflix.yaml" "Microsoft.yaml" "Google.yaml" "Facebook.yaml" "Discord.yaml" "Apple.yaml")
 
 
-CURRENT_VERSION="v13.3.2"
+CURRENT_VERSION="v13.3.3"
 TOOLBOX_URL="https://raw.githubusercontent.com/MoGuangYu/Surfing/main/box_bll/mihomo/Toolbox.sh"
 TOOLBOX_FILE="/data/adb/box_bll/mihomo/Toolbox.sh"
 
@@ -227,9 +227,22 @@ update_module() {
         echo "当前已是最新版本！"
         return
     fi
-
+    echo "↴"
+    echo "正在获取更新日志..."
+    echo
     changelog=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "$CHANGELOG_URL")
-    latest_changelog=$(echo "$changelog" | awk '/^## /{p=0} p; /^## '$module_version'$/{p=1}')
+    escaped_version=$(echo "$module_version" | sed 's/\./[.]/g')
+    latest_changelog=$(echo "$changelog" | awk -v ver="$escaped_version" '
+        /^# / {
+            if ($0 ~ "^# " ver "( |$)") {
+                p=1
+                next
+            } else {
+                p=0
+            }
+        }
+        p { print }
+    ')
     echo "$latest_changelog"
     echo
 
